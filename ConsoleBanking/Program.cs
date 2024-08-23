@@ -6,16 +6,47 @@ namespace ConsoleBanking
     {
         static UserList users = new UserList();
         static User? currentUser;
+        static Account? currentAccount;
         static void Main(string[] args)
         {
-            // Send user to main page to login or create account
-            bool loggedIn;
-            loggedIn = MainPage();
-            if(!loggedIn) return;
-            // User is logged in
             try
             {
-                UserPage();
+                // Start thread that will accumulate interest on all open accounts every 1 minute.
+                Thread interestThread = new Thread(() =>
+                {
+                    while (true)
+                    {                        
+                        Parallel.ForEach(users.GetAllUsers(), user =>
+                        {
+                            Parallel.ForEach(user.GetAllAccounts(), account =>
+                            {
+                                if (account.GetAccountType() == "Savings")
+                                {
+                                    SavingsAccount savingsAccount = (SavingsAccount)account;
+                                    savingsAccount.CompoundInterest();
+                                }
+                            });
+                        });
+                        Thread.Sleep(60000);
+                    }
+                });
+                interestThread.IsBackground = true;
+                interestThread.Start();
+                // Send user to main page to login or create account
+                bool loggedIn;
+                bool exit = false;
+                while (!exit)
+                {
+                    loggedIn = MainPage();
+                    if (!loggedIn) return;
+
+                    // User is logged in, go to their page
+
+                    UserPage();
+                    Console.Clear();
+                    loggedIn = false;
+                }
+                
             }
             catch(Exception e)
             {
@@ -23,6 +54,10 @@ namespace ConsoleBanking
             }
         }
 
+        /// <summary>
+        /// Main page for Console Banking
+        /// </summary>
+        /// <returns>True if user successfully logged in. Otherwise false.</returns>
         static bool MainPage()
         {
             string input;
@@ -58,12 +93,120 @@ namespace ConsoleBanking
             return loggedIn;
         }
 
+        /// <summary>
+        /// Current user's page to console
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         static void UserPage()
         {
-            if (currentUser == null) throw new Exception("currentUser is null.");
-            Console.WriteLine("Hello, " + currentUser.GetName() + "!");
-            Console.ReadKey();
+            try
+            {
+                if (currentUser == null) throw new Exception("currentUser is null.");
+                Console.Clear();
+                string input;
+                bool exit = false;
+                while (!exit)
+                {
+                    // Display user information
+                    Console.WriteLine(currentUser.ToString());
+
+                    // Prompt for command
+                    Console.Write("\nEnter a command (add account, edit account, remove account, log out): ");
+                    input = Console.ReadLine();
+                    input = input.ToLower();
+                    switch (input)
+                    {
+                        case "add account":
+                            Console.Write("Enter account type (checking/savings): ");
+                            input = Console.ReadLine();
+                            if(input == "checking")
+                            {
+                                currentUser.AddAccount(new CheckingAccount());
+                            }
+                            else if(input == "savings")
+                            {
+                                currentUser.AddAccount(new SavingsAccount());
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid account type.");
+                            }
+                            break;
+                        case "remove account":
+                            Console.Write("Enter the account number to remove: ");
+                            input = Console.ReadLine();
+                            if (currentUser.RemoveAccount(int.Parse(input))) Console.WriteLine("Account removed successfully!");
+                            else Console.WriteLine("Account not found.");
+                            break;
+                        case "edit account":
+                            Console.Write("Enter the account number to edit: ");
+                            input = Console.ReadLine();
+                            currentAccount = currentUser.GetAccount(int.Parse(input));
+                            if (currentAccount == null)
+                            {
+                                Console.WriteLine("Account not found.");
+                                break;
+                            }
+                            AccountPage();
+                            break;
+                        case "log out":
+                            Console.WriteLine($"Logging out...\nGoodbye, {currentUser.GetName()}");
+                            exit = true;
+                            break;
+                        default:
+                            Console.WriteLine(input + " is an invalid command. Please try again.");
+                            break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("An error occurred: " + e.Message);
+            }
+            
         }
+
+        static void AccountPage()
+        {
+            Console.Clear();
+            if (currentAccount == null) throw new Exception("currentAccount is null.");
+            Console.WriteLine("Editing Account:\n" + currentAccount.ToString());
+            string input;
+            bool exit = false;
+            while (!exit)
+            {
+                Console.Write("Enter a command (deposit, withdraw, exit): ");
+                input = Console.ReadLine();
+                input = input.ToLower();
+                switch (input)
+                {
+                    case "deposit":
+                        Console.Write("Enter the amount to deposit: ");
+                        input = Console.ReadLine();
+                        currentAccount.DepositFunds(decimal.Parse(input));
+                        Console.WriteLine("Deposit successful!");
+                        break;
+                    case "withdraw":
+                        Console.Write("Enter the amount to withdraw: ");
+                        input = Console.ReadLine();
+                        currentAccount.WithdrawFunds(decimal.Parse(input));
+                        Console.WriteLine("Withdrawal successful!");
+                        break;
+                    case "exit":
+                        Console.WriteLine("Returning to overview...");
+                        exit = true;
+                        break;
+                    default:
+                        Console.WriteLine(input + " is an invalid command. Please try again.");
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Console interaction for user login page
+        /// </summary>
+        /// <returns>False if incorrect password or user not found. True if login successful</returns>
         static bool UserLogin()
         {
             string username;
@@ -99,6 +242,9 @@ namespace ConsoleBanking
             
         }
 
+        /// <summary>
+        /// Console interaction to create a new user account
+        /// </summary>
         static void CreateUser()
         {
             string username = "default";
