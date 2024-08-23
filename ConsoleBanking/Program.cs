@@ -1,8 +1,11 @@
-﻿namespace ConsoleBanking
+﻿using System.Net.Security;
+
+namespace ConsoleBanking
 {
     class Program
     {
-        static List<User> users = new List<User>();
+        static UserList users = new UserList();
+        static User? currentUser;
         static void Main(string[] args)
         {
             // Send user to main page to login or create account
@@ -10,7 +13,14 @@
             loggedIn = MainPage();
             if(!loggedIn) return;
             // User is logged in
-
+            try
+            {
+                UserPage();
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("An error occurred: " + e.Message);
+            }
         }
 
         static bool MainPage()
@@ -28,45 +38,65 @@
                 {
                     case "login":
                         // Login
-                        Console.WriteLine("Directing to login page...");
+                        Console.WriteLine("\nDirecting to login page...\n");
                         loggedIn = UserLogin();
                         break;
                     case "create":
                         // Create Account
-                        Console.WriteLine("Directing to create account page...");
+                        Console.WriteLine("\nDirecting to create account page...\n");
                         CreateUser();
                         break;
                     case "exit":
-                        Console.WriteLine("Exiting Console Banking. Goodbye!");
+                        Console.WriteLine("\nExiting Console Banking. Goodbye!\n");
                         exit = true;
                         break;
                     default:
-                        Console.WriteLine(input + " is an invalid command. Please try again.");
+                        Console.WriteLine(input + " is an invalid command. Please try again.\n");
                         break;
                 }
             }
             return loggedIn;
         }
 
+        static void UserPage()
+        {
+            if (currentUser == null) throw new Exception("currentUser is null.");
+            Console.WriteLine("Hello, " + currentUser.GetName() + "!");
+            Console.ReadKey();
+        }
         static bool UserLogin()
         {
             string username;
             string password;
+            
+            // Get username and password
             Console.Write("Enter your username: ");
             username = Console.ReadLine();
             Console.Write("Enter your password: ");
             password = Console.ReadLine();
-            // Check if username and password are correct
-            if(username == "admin" && password == "password")
+
+            // Check if user exists and password is valid
+            try
             {
-                Console.WriteLine("Login successful!");
-                return true;
+                User user = users.GetUser(username);
+                if (user.GetPassword() == password)
+                {
+                    Console.WriteLine("Login successful!\n");
+                    currentUser = user;
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Incorrect password.\n");
+                    return false;
+                }
             }
-            else
+            catch (ArgumentException)
             {
-                Console.WriteLine("Login failed. Please try again.");
+                Console.WriteLine("User not found.\n");
+                return false;
             }
-            return false;
+            
         }
 
         static void CreateUser()
@@ -83,7 +113,17 @@
                 username = Console.ReadLine();
 
                 // Check if username already exists
-                userExists = CheckUsersFor(username);
+                try
+                {
+                    users.GetUser(username);
+                    Console.WriteLine("User already exists. Try logging in.\n");
+                    return;
+                }
+                catch (ArgumentException)
+                {
+                    Console.WriteLine("Username is available.");
+                    userExists = false;
+                }
             }
             
             // Get and confirm password
@@ -106,23 +146,9 @@
             Console.Write("Enter your address: ");
             address = Console.ReadLine();
             User newUser = new User(username, password, name, address);
-            users.Add(newUser);
-            Console.WriteLine("Account created successfully!");
+            users.AddUser(newUser);
+            Console.WriteLine("Account created successfully!\n");
         }
-
-        static bool CheckUsersFor(string username)
-        {
-            // Check if username already exists
-            foreach (User user in users)
-            {
-                if (user.GetUsername() == username)
-                {
-                    Console.WriteLine("Username already exists. Please try again.");
-                    return true;
-                }
-            }
-            return false;
-        } 
 
     }
 }
