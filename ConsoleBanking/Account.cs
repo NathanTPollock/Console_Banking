@@ -9,6 +9,9 @@ namespace ConsoleBanking
 {
     internal abstract class Account
     {
+        // Due to background interest thread, we need to lock our balance methods.
+        private readonly object balanceLock = new object();
+
         private int accountNumber;
         private decimal balance;
         private string openedDate;
@@ -29,7 +32,13 @@ namespace ConsoleBanking
         }
         // Getters
         public int GetAccountNumber() => accountNumber;
-        public decimal GetBalance() => balance;
+        public decimal GetBalance()
+        {
+           lock (balanceLock)
+            {
+                return balance;
+            }
+        }
         public string GetOpenedDate() => openedDate;
         public decimal GetAccountFee() => accountFee;
         public string GetAccountType() => accountType.ToString();
@@ -49,9 +58,12 @@ namespace ConsoleBanking
         /// <exception cref="ArgumentException">Amount was non-positive</exception>
         public decimal DepositFunds(decimal amount)
         {
-            if (amount <= 0) throw new ArgumentException("Amount must be greater than 0.");
-            balance += amount;
-            return balance;
+            lock (balanceLock)
+            {
+                if (amount <= 0) throw new ArgumentException("Amount must be greater than 0.");
+                balance += amount;
+                return balance;
+            }
         }
         /// <summary>
         /// Withdraws funds from the account.
@@ -63,10 +75,14 @@ namespace ConsoleBanking
         /// </exception>
         public decimal WithdrawFunds(decimal amount)
         {
+            lock (balanceLock)
+            {
             if (amount <= 0) throw new ArgumentException("Amount must be greater than 0.");
             if (amount > balance) throw new ArgumentException("Insufficient funds.");
             balance -= amount;
             return balance;
+            }
+
         }
 
         /// <summary>
