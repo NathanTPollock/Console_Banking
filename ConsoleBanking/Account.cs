@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace ConsoleBanking
 {
-    internal abstract class Account
+    internal abstract class Account : IAccount
     {
         // Due to background interest thread, we need to lock our balance methods.
-        private readonly object balanceLock = new object();
+        private readonly object balanceLock = new();
 
         private int accountNumber;
         private decimal balance;
@@ -91,13 +91,15 @@ namespace ConsoleBanking
         /// <returns></returns>
         public decimal ChargeFee()
         {
-            balance = balance - accountFee;
-            return balance;
+            lock (balanceLock)
+            {
+                balance -= accountFee;
+                return balance;
+            }
+
         }
 
         public abstract void SetAccountFee(decimal fee);
-
-        // public void SetBalance(decimal balance) => this.balance = balance;
 
         public override string ToString()
         {
@@ -105,8 +107,8 @@ namespace ConsoleBanking
                 $".....Balance: {balance:C}\n" +
                 $".....Opened: {openedDate}\n" +
                 $".....Fee: {accountFee}\n" +
-                $".....Type: {accountType.ToString()}\n" +
-                $".....Status: {status.ToString()}\n";
+                $".....Type: {accountType}\n" +
+                $".....Status: {status}\n";
         }
     }
 }

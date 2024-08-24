@@ -26,17 +26,32 @@ namespace ConsoleBanking
         /// </summary>
         /// <param name="accountNumber"></param>
         /// <returns>Account if account is found. Null if not found</returns>
-        public Account FindAccount(int accountNumber)
+        public Account? FindAccount(int accountNumber)
         {
-            if (accounts.TryGetValue(accountNumber, out Account account)) return account;
+            if (accounts.TryGetValue(accountNumber, out Account? account)) return account;
             return null;
         }
-
+        /// <summary>
+        /// Removes account from the account list.
+        /// </summary>
+        /// <param name="accountNumber"></param>
+        /// <returns>True if found and removed. False otherwise</returns>
         public bool RemoveAccount(int accountNumber)
         {
             return accounts.Remove(accountNumber);
         }
-
+        /// <summary>
+        /// Retrieves the number of accounts in this account list.
+        /// </summary>
+        /// <returns>Count of account in the account list dictionary.</returns>
+        public int Size()
+        {
+            return accounts.Count;
+        }
+        /// <summary>
+        /// Retrieves all accounts in this account list.
+        /// </summary>
+        /// <returns>Values of account list in an enumberable.</returns>
         public IEnumerable<Account> GetAllAccounts()
         {
             return accounts.Values;

@@ -32,6 +32,24 @@ namespace ConsoleBanking
                 });
                 interestThread.IsBackground = true;
                 interestThread.Start();
+
+                // Start thread that will charge account fees on all open accounts every 5 minutes.
+                Thread feeThread = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        Parallel.ForEach(users.GetAllUsers(), user =>
+                        {
+                            Parallel.ForEach(user.GetAllAccounts(), account =>
+                            {
+                                account.ChargeFee();
+                            });
+                        });
+                        Thread.Sleep(300000);
+                    }
+                });
+                feeThread.IsBackground = true;
+                feeThread.Start();
                 // Send user to main page to login or create account
                 bool loggedIn;
                 bool exit = false;
@@ -60,7 +78,7 @@ namespace ConsoleBanking
         /// <returns>True if user successfully logged in. Otherwise false.</returns>
         static bool MainPage()
         {
-            string input;
+            string? input;
             bool exit = false;
             bool loggedIn = false;
             while (!exit && !loggedIn)
@@ -68,7 +86,7 @@ namespace ConsoleBanking
                 // Welcome User, Prompt for login or create account
                 Console.Write("Welcome to Console Banking! Would you like to login or create an account? (login/create/exit): ");
                 input = Console.ReadLine();
-                input = input.ToLower();
+                input = input?.ToLower(); // Convert to lowercase if input not null
                 switch (input)
                 {
                     case "login":
@@ -103,7 +121,7 @@ namespace ConsoleBanking
             {
                 if (currentUser == null) throw new Exception("currentUser is null.");
                 Console.Clear();
-                string input;
+                string? input;
                 bool exit = false;
                 while (!exit)
                 {
@@ -113,7 +131,7 @@ namespace ConsoleBanking
                     // Prompt for command
                     Console.Write("\nEnter a command (add account, edit account, remove account, log out): ");
                     input = Console.ReadLine();
-                    input = input.ToLower();
+                    input = input?.ToLower();
                     switch (input)
                     {
                         case "add account":
@@ -135,12 +153,14 @@ namespace ConsoleBanking
                         case "remove account":
                             Console.Write("Enter the account number to remove: ");
                             input = Console.ReadLine();
+                            if (input == null) break;
                             if (currentUser.RemoveAccount(int.Parse(input))) Console.WriteLine("Account removed successfully!");
                             else Console.WriteLine("Account not found.");
                             break;
                         case "edit account":
                             Console.Write("Enter the account number to edit: ");
                             input = Console.ReadLine();
+                            if (input == null) break;
                             currentAccount = currentUser.GetAccount(int.Parse(input));
                             if (currentAccount == null)
                             {
@@ -165,30 +185,35 @@ namespace ConsoleBanking
             }
             
         }
-
+        /// <summary>
+        /// Console interaction for viewing and editing an account
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         static void AccountPage()
         {
             Console.Clear();
             if (currentAccount == null) throw new Exception("currentAccount is null.");
             Console.WriteLine("Editing Account:\n" + currentAccount.ToString());
-            string input;
+            string? input;
             bool exit = false;
             while (!exit)
             {
                 Console.Write("Enter a command (deposit, withdraw, exit): ");
                 input = Console.ReadLine();
-                input = input.ToLower();
+                input = input == null ? null : input.ToLower();
                 switch (input)
                 {
                     case "deposit":
                         Console.Write("Enter the amount to deposit: ");
                         input = Console.ReadLine();
+                        if (input == null) break;
                         currentAccount.DepositFunds(decimal.Parse(input));
                         Console.WriteLine("Deposit successful!");
                         break;
                     case "withdraw":
                         Console.Write("Enter the amount to withdraw: ");
                         input = Console.ReadLine();
+                        if (input == null) break;
                         currentAccount.WithdrawFunds(decimal.Parse(input));
                         Console.WriteLine("Withdrawal successful!");
                         break;
@@ -209,12 +234,13 @@ namespace ConsoleBanking
         /// <returns>False if incorrect password or user not found. True if login successful</returns>
         static bool UserLogin()
         {
-            string username;
-            string password;
+            string? username;
+            string? password;
             
             // Get username and password
             Console.Write("Enter your username: ");
             username = Console.ReadLine();
+            if (username == null) return false;
             Console.Write("Enter your password: ");
             password = Console.ReadLine();
 
@@ -247,9 +273,9 @@ namespace ConsoleBanking
         /// </summary>
         static void CreateUser()
         {
-            string username = "default";
-            string password = "default";
-            string confirmPassword = "def";
+            string? username = "default";
+            string? password = "default";
+            string? confirmPassword = "def";
             bool userExists = true;
 
             // Ensure username is unique
@@ -257,6 +283,7 @@ namespace ConsoleBanking
             {
                 Console.Write("Enter your desired username: ");
                 username = Console.ReadLine();
+                if (username == null) return;
 
                 // Check if username already exists
                 try
@@ -285,12 +312,13 @@ namespace ConsoleBanking
 
             // Create user account
             Console.WriteLine("Valid Credentials, Please enter your information.");
-            string name;
-            string address;
+            string? name;
+            string? address;
             Console.Write("Enter your name: ");
             name = Console.ReadLine();
             Console.Write("Enter your address: ");
             address = Console.ReadLine();
+            if (password == null || name == null || address == null) return;
             User newUser = new User(username, password, name, address);
             users.AddUser(newUser);
             Console.WriteLine("Account created successfully!\n");
