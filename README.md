@@ -14,12 +14,10 @@ Implements IAccount and enforces the deposit, withdrawal, and information reques
 #### *Class SavingsAccount*
 Inherits abstract class account and defines SetAccountFee while ensuring that the fee is not set below the minimum of $10. Also defines and implements a method to compound interest
 #### *Class CheckingAccount*
-Inherits abstract class account and defines SetAccoutFee while ensuring that the fee is not set below the minimum of $0. Also defines and implements a method to issue a debit card.
-#### *Class DebitCard*
-Contains information that will allow an outside user to make a purchase request from the account using the debit card details
+Inherits abstract class account and defines SetAccoutFee while ensuring that the fee is not set below the minimum of $0.
 
 ## *Class Diagram*
-![Banking Application Class Diagram (2)](https://github.com/user-attachments/assets/f7cb6f92-d268-4dc2-b6aa-98f9e847bae6)
+![Banking Application Class Diagram (3)](https://github.com/user-attachments/assets/4967d347-6666-4eae-ab7e-fbaffc8f9e92)
 
 ## *Activity Diagram*
 ![Banking Application Activity Diagram (1)](https://github.com/user-attachments/assets/9af2464d-60eb-42ca-bbc0-140eb1d3c05f)
@@ -27,10 +25,10 @@ Contains information that will allow an outside user to make a purchase request 
 # Notes
 ## Features
 - [X] Design Document
-- [ ] Create User
-- [ ] User Login
-- [ ] Create Account
-- [ ] Access Account
-- [ ] Transfer Between Accounts
+- [X] Create User
+- [X] User Login
+- [X] Create Account
+- [X] Access Account
+- [X] Transfer Between Accounts
 - [ ] Store data
 - [ ] Load data
