@@ -20,7 +20,8 @@ Inherits abstract class account and defines SetAccoutFee while ensuring that the
 ![Banking Application Class Diagram (3)](https://github.com/user-attachments/assets/4967d347-6666-4eae-ab7e-fbaffc8f9e92)
 
 ## *Activity Diagram*
-![Banking Application Activity Diagram (1)](https://github.com/user-attachments/assets/9af2464d-60eb-42ca-bbc0-140eb1d3c05f)
+![Banking Application Activity Diagram (2)](https://github.com/user-attachments/assets/46caab46-3650-436a-b57a-e91d7edd0882)
+
 
 # Notes
 ## Features
