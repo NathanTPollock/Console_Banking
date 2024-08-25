@@ -31,5 +31,7 @@ Inherits abstract class account and defines SetAccoutFee while ensuring that the
 - [X] Create Account
 - [X] Access Account
 - [X] Transfer Between Accounts
+- [X] Background Compound Interest
+- [X] Background Charge Account Fees
 - [ ] Store data
 - [ ] Load data
